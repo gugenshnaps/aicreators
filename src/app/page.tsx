@@ -8,6 +8,8 @@ import AuthModal from '@/components/AuthModal';
 import ProfileModal from '@/components/ProfileModal';
 import MyWorksModal from '@/components/MyWorksModal';
 import AddWorkModal from '@/components/AddWorkModal';
+import ContactModal from '@/components/ContactModal';
+import CreatorProfileModal from '@/components/CreatorProfileModal';
 import { mockWorks, mockCreators, Work } from '@/data/mockWorks';
 
 type AuthMode = 'open' | 'reg';
@@ -48,6 +50,14 @@ export default function Home() {
 
   // Add work modal state
   const [addWorkModalOpen, setAddWorkModalOpen] = useState(false);
+
+  // Contact modal state
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [selectedCreatorContact, setSelectedCreatorContact] = useState<{name: string; telegram?: string; instagram?: string} | null>(null);
+
+  // Creator profile modal state
+  const [creatorProfileModalOpen, setCreatorProfileModalOpen] = useState(false);
+  const [selectedCreatorProfile, setSelectedCreatorProfile] = useState<{id: string; name: string; avatar?: string; telegram?: string; instagram?: string} | null>(null);
 
   // User works from localStorage
   const [userWorks, setUserWorks] = useState<UserWork[]>([]);
@@ -109,7 +119,78 @@ export default function Home() {
     loadAllWorks();
   };
 
-  const getCreatorForWork = (creatorId: number) => {
+  const handleContactClick = () => {
+    if (selectedWork) {
+      // Check if it's a user work or mock work
+      const userWork = userWorks.find(w => w.id === selectedWork.id.toString() || `work_${selectedWork.id}` === w.id);
+      
+      if (userWork) {
+        // Get creator profile from localStorage
+        const savedProfile = localStorage.getItem(`profile_${userWork.creatorId}`);
+        const profile = savedProfile ? JSON.parse(savedProfile) : {};
+        
+        setSelectedCreatorContact({
+          name: userWork.creatorName,
+          telegram: profile.telegram,
+          instagram: profile.instagram,
+        });
+      } else {
+        // Mock creator
+        const creator = mockCreators.find(c => c.id === selectedWork.creatorId);
+        setSelectedCreatorContact({
+          name: creator?.name || 'Креатор',
+          telegram: '@creator',
+          instagram: '@creator',
+        });
+      }
+      setContactModalOpen(true);
+    }
+  };
+
+  const handleViewProfileClick = () => {
+    if (selectedWork) {
+      const userWork = userWorks.find(w => w.id === selectedWork.id.toString() || `work_${selectedWork.id}` === w.id);
+      
+      if (userWork) {
+        const savedProfile = localStorage.getItem(`profile_${userWork.creatorId}`);
+        const profile = savedProfile ? JSON.parse(savedProfile) : {};
+        const savedUser = localStorage.getItem('user');
+        const creatorUser = savedUser ? JSON.parse(savedUser) : null;
+        
+        setSelectedCreatorProfile({
+          id: userWork.creatorId,
+          name: userWork.creatorName,
+          avatar: creatorUser?.photo,
+          telegram: profile.telegram,
+          instagram: profile.instagram,
+        });
+      } else {
+        const creator = mockCreators.find(c => c.id === selectedWork.creatorId);
+        if (creator) {
+          setSelectedCreatorProfile({
+            id: creator.id.toString(),
+            name: creator.name,
+            avatar: creator.avatar,
+            telegram: '@creator',
+            instagram: '@creator',
+          });
+        }
+      }
+      setCreatorProfileModalOpen(true);
+    }
+  };
+
+  const getCreatorForWork = (creatorId: number | string) => {
+    // Check if it's a user's work
+    const work = userWorks.find(w => w.creatorId === creatorId.toString());
+    if (work) {
+      return {
+        id: parseInt(creatorId.toString()) || 0,
+        name: work.creatorName,
+        avatar: '',
+        specialty: 'AI Креатор',
+      };
+    }
     return mockCreators.find(c => c.id === creatorId);
   };
 
@@ -122,7 +203,7 @@ export default function Home() {
       views: `${w.views} просм.`,
       height: 280 + Math.floor(Math.random() * 100),
       category: w.category,
-      creatorId: 1,
+      creatorId: w.creatorId as unknown as number,
       gradient: undefined as string | undefined,
     })),
     ...mockWorks,
@@ -163,6 +244,26 @@ export default function Home() {
         onClose={() => setWorkModalOpen(false)}
         work={selectedWork}
         creator={selectedWork ? getCreatorForWork(selectedWork.creatorId) : undefined}
+        onContactClick={handleContactClick}
+        onViewProfileClick={handleViewProfileClick}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        creator={selectedCreatorContact}
+      />
+
+      {/* Creator Profile Modal */}
+      <CreatorProfileModal
+        isOpen={creatorProfileModalOpen}
+        onClose={() => setCreatorProfileModalOpen(false)}
+        creator={selectedCreatorProfile}
+        onWorkClick={(work) => {
+          setCreatorProfileModalOpen(false);
+          handleWorkClick(work);
+        }}
       />
 
       {/* Auth Modal */}

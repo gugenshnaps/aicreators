@@ -13,17 +13,19 @@ interface WorkModalProps {
     height: number;
     gradient?: string;
     category: string;
-    creatorId: number;
+    creatorId: number | string;
   } | null;
   creator?: {
-    id: number;
+    id: number | string;
     name: string;
     avatar: string;
     specialty: string;
   };
+  onContactClick?: () => void;
+  onViewProfileClick?: () => void;
 }
 
-export default function WorkModal({ isOpen, onClose, work, creator }: WorkModalProps) {
+export default function WorkModal({ isOpen, onClose, work, creator, onContactClick, onViewProfileClick }: WorkModalProps) {
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -149,17 +151,32 @@ export default function WorkModal({ isOpen, onClose, work, creator }: WorkModalP
             </p>
           </div>
 
-          {/* Action Button */}
-          <button 
-            className="w-full py-3 px-6 text-white font-medium rounded-full transition-all hover:opacity-90 mt-auto"
-            style={{ 
-              fontFamily: 'var(--font-londrina-shadow)',
-              fontSize: '1.25rem',
-              backgroundColor: '#000'
-            }}
-          >
-            НАПИСАТЬ КРЕАТОРУ
-          </button>
+          {/* Action Buttons */}
+          <div className="space-y-2 mt-auto">
+            <button 
+              onClick={onContactClick}
+              className="w-full py-3 px-6 text-white font-medium rounded-full transition-all hover:opacity-90"
+              style={{ 
+                fontFamily: 'var(--font-londrina-shadow)',
+                fontSize: '1.1rem',
+                backgroundColor: '#000'
+              }}
+            >
+              НАПИСАТЬ КРЕАТОРУ
+            </button>
+            
+            <button 
+              onClick={onViewProfileClick}
+              className="w-full py-3 px-6 font-medium rounded-full transition-all hover:bg-gray-100 border-2 border-gray-200"
+              style={{ 
+                fontFamily: 'var(--font-londrina-shadow)',
+                fontSize: '1rem',
+                color: '#2F00FF'
+              }}
+            >
+              ВСЕ РАБОТЫ КРЕАТОРА
+            </button>
+          </div>
         </div>
       </div>
     </div>
