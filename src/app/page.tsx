@@ -10,7 +10,7 @@ import MyWorksModal from '@/components/MyWorksModal';
 import AddWorkModal from '@/components/AddWorkModal';
 import ContactModal from '@/components/ContactModal';
 import CreatorProfileModal from '@/components/CreatorProfileModal';
-import { mockWorks, mockCreators, Work } from '@/data/mockWorks';
+import { supabase } from '@/lib/supabase';
 
 type AuthMode = 'open' | 'reg';
 
@@ -21,16 +21,30 @@ interface User {
   photo?: string;
 }
 
-interface UserWork {
+interface Work {
   id: string;
-  imageUrl: string;
+  image_url: string;
   title: string;
   category: string;
   views: number;
-  createdAt: string;
+  created_at: string;
+  creator_id: string;
+  creator_name: string;
+  is_video: boolean;
+}
+
+// Для отображения
+interface DisplayWork {
+  id: string;
+  imageUrl: string;
+  title: string;
+  views: string;
+  height: number;
+  category: string;
   creatorId: string;
   creatorName: string;
-  isVideo?: boolean;
+  gradient?: string;
+  isVideo: boolean;
 }
 
 export default function Home() {
@@ -40,7 +54,7 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('open');
 
   // Work modal state
-  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
+  const [selectedWork, setSelectedWork] = useState<DisplayWork | null>(null);
   const [workModalOpen, setWorkModalOpen] = useState(false);
 
   // Profile modal state
@@ -60,10 +74,11 @@ export default function Home() {
   const [creatorProfileModalOpen, setCreatorProfileModalOpen] = useState(false);
   const [selectedCreatorProfile, setSelectedCreatorProfile] = useState<{id: string; name: string; avatar?: string; telegram?: string; instagram?: string} | null>(null);
 
-  // User works from localStorage
-  const [userWorks, setUserWorks] = useState<UserWork[]>([]);
+  // Works from Supabase
+  const [works, setWorks] = useState<DisplayWork[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user and works on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -74,18 +89,41 @@ export default function Home() {
       }
     }
     
-    // Load all user works
-    loadAllWorks();
+    loadWorks();
   }, []);
 
-  const loadAllWorks = () => {
-    const allWorks = localStorage.getItem('all_works');
-    if (allWorks) {
-      try {
-        setUserWorks(JSON.parse(allWorks));
-      } catch (e) {
-        console.error('Error loading works:', e);
+  // Загрузка работ из Supabase
+  const loadWorks = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('works')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading works:', error);
+        return;
       }
+
+      if (data) {
+        const displayWorks: DisplayWork[] = data.map((work: Work) => ({
+          id: work.id,
+          imageUrl: work.image_url,
+          title: work.title || '',
+          views: `${work.views} просм.`,
+          height: 280 + Math.floor(Math.random() * 120),
+          category: work.category,
+          creatorId: work.creator_id,
+          creatorName: work.creator_name || 'Креатор',
+          isVideo: work.is_video,
+        }));
+        setWorks(displayWorks);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,12 +137,13 @@ export default function Home() {
     setAuthModalOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     localStorage.removeItem('user');
   };
 
-  const handleWorkClick = (work: Work) => {
+  const handleWorkClick = (work: DisplayWork) => {
     setSelectedWork(work);
     setWorkModalOpen(true);
   };
@@ -113,125 +152,47 @@ export default function Home() {
     if (user) {
       const updatedUser = { ...user, name: updatedProfile.name, photo: updatedProfile.photo };
       setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
   const handleWorkAdded = () => {
-    loadAllWorks();
+    loadWorks(); // Перезагружаем работы из Supabase
   };
 
   const handleContactClick = () => {
     if (selectedWork) {
-      const work = selectedWork as any;
-      
-      if (work.isUserWork) {
-        // Get creator profile from localStorage
-        const savedProfile = localStorage.getItem(`profile_${work.creatorId}`);
-        const profile = savedProfile ? JSON.parse(savedProfile) : {};
-        
-        setSelectedCreatorContact({
-          name: work.creatorName || 'Креатор',
-          telegram: profile.telegram,
-          instagram: profile.instagram,
-        });
-      } else {
-        // Mock creator
-        const creator = mockCreators.find(c => c.id === selectedWork.creatorId);
-        setSelectedCreatorContact({
-          name: creator?.name || 'Креатор',
-          telegram: '@creator',
-          instagram: '@creator',
-        });
-      }
+      // Пока используем данные из работы
+      setSelectedCreatorContact({
+        name: selectedWork.creatorName || 'Креатор',
+        telegram: undefined,
+        instagram: undefined,
+      });
       setContactModalOpen(true);
     }
   };
 
   const handleViewProfileClick = () => {
     if (selectedWork) {
-      const work = selectedWork as any;
-      
-      if (work.isUserWork) {
-        const savedProfile = localStorage.getItem(`profile_${work.creatorId}`);
-        const profile = savedProfile ? JSON.parse(savedProfile) : {};
-        
-        // Get avatar from user data if it's the current user
-        let avatar = '';
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          const currentUser = JSON.parse(savedUser);
-          if (currentUser.id === work.creatorId) {
-            avatar = currentUser.photo || '';
-          }
-        }
-        
-        setSelectedCreatorProfile({
-          id: work.creatorId,
-          name: work.creatorName || 'Креатор',
-          avatar: avatar,
-          telegram: profile.telegram,
-          instagram: profile.instagram,
-        });
-        setCreatorProfileModalOpen(true);
-      } else {
-        const creator = mockCreators.find(c => c.id === selectedWork.creatorId);
-        if (creator) {
-          setSelectedCreatorProfile({
-            id: creator.id.toString(),
-            name: creator.name,
-            avatar: creator.avatar,
-            telegram: '@creator',
-            instagram: '@creator',
-          });
-          setCreatorProfileModalOpen(true);
-        }
-      }
+      setSelectedCreatorProfile({
+        id: selectedWork.creatorId,
+        name: selectedWork.creatorName || 'Креатор',
+        avatar: undefined,
+        telegram: undefined,
+        instagram: undefined,
+      });
+      setCreatorProfileModalOpen(true);
     }
   };
 
-  const getCreatorForWork = (work: any) => {
-    if (work.isUserWork) {
-      // Get avatar from user if it's current user
-      let avatar = '';
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        const currentUser = JSON.parse(savedUser);
-        if (currentUser.id === work.creatorId) {
-          avatar = currentUser.photo || '';
-        }
-      }
-      
-      return {
-        id: work.creatorId,
-        name: work.creatorName || 'Креатор',
-        avatar: avatar,
-        specialty: 'AI Креатор',
-      };
-    }
-    return mockCreators.find(c => c.id === work.creatorId);
+  const getCreatorForWork = (work: DisplayWork) => {
+    return {
+      id: work.creatorId,
+      name: work.creatorName || 'Креатор',
+      avatar: '',
+      specialty: 'AI Креатор',
+    };
   };
-
-  // Combine mock works with user works
-  const allDisplayWorks = [
-    ...userWorks.map((w, index) => ({
-      id: w.id, // Keep original ID
-      imageUrl: w.imageUrl,
-      title: w.title,
-      views: `${w.views} просм.`,
-      height: 280 + Math.floor(Math.random() * 100),
-      category: w.category,
-      creatorId: w.creatorId,
-      creatorName: w.creatorName,
-      gradient: undefined as string | undefined,
-      isUserWork: true,
-      isVideo: w.isVideo, // Передаём тип файла
-    })),
-    ...mockWorks.map(w => ({
-      ...w,
-      isUserWork: false,
-      isVideo: false,
-    })),
-  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -245,29 +206,51 @@ export default function Home() {
       />
 
       <main className="px-0">
-        {/* Masonry Grid */}
-        <div className="masonry-grid">
-          {allDisplayWorks.map((work) => (
-            <WorkCard
-              key={work.id}
-              id={work.id}
-              imageUrl={work.imageUrl}
-              title={work.title}
-              views={work.views}
-              height={work.height}
-              gradient={work.gradient}
-              isVideo={work.isVideo}
-              onClick={() => handleWorkClick(work as Work)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <svg className="animate-spin w-10 h-10 mx-auto text-blue-500 mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-gray-500">Загрузка работ...</p>
+            </div>
+          </div>
+        ) : works.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-gray-500 text-lg mb-2">Пока нет работ</p>
+              <p className="text-gray-400">Будьте первым, кто добавит работу!</p>
+            </div>
+          </div>
+        ) : (
+          <div className="masonry-grid">
+            {works.map((work) => (
+              <WorkCard
+                key={work.id}
+                id={work.id}
+                imageUrl={work.imageUrl}
+                title={work.title}
+                views={work.views}
+                height={work.height}
+                gradient={work.gradient}
+                isVideo={work.isVideo}
+                onClick={() => handleWorkClick(work)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Work Modal */}
       <WorkModal
         isOpen={workModalOpen}
         onClose={() => setWorkModalOpen(false)}
-        work={selectedWork}
+        work={selectedWork ? {
+          ...selectedWork,
+          views: selectedWork.views,
+          height: selectedWork.height,
+        } : null}
         creator={selectedWork ? getCreatorForWork(selectedWork) : undefined}
         onContactClick={handleContactClick}
         onViewProfileClick={handleViewProfileClick}
@@ -287,7 +270,7 @@ export default function Home() {
         creator={selectedCreatorProfile}
         onWorkClick={(work) => {
           setCreatorProfileModalOpen(false);
-          handleWorkClick(work);
+          handleWorkClick(work as DisplayWork);
         }}
       />
 

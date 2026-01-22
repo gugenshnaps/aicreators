@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { uploadFile } from '@/lib/supabase';
+import { uploadFile, supabase } from '@/lib/supabase';
 
 interface AddWorkModalProps {
   isOpen: boolean;
@@ -89,7 +89,7 @@ export default function AddWorkModal({ isOpen, onClose, userId, userName, onWork
     setIsLoading(true);
 
     try {
-      // Upload to Supabase
+      // Upload file to Supabase Storage
       const imageUrl = await uploadFile('works', file, userId);
       
       if (!imageUrl) {
@@ -98,27 +98,23 @@ export default function AddWorkModal({ isOpen, onClose, userId, userName, onWork
 
       const isVideo = file.type.startsWith('video/');
       
-      const newWork = {
-        id: `work_${Date.now()}`,
-        imageUrl,
-        title,
-        category,
-        views: 0,
-        createdAt: new Date().toISOString(),
-        creatorId: userId,
-        creatorName: userName || 'Аноним',
-        isVideo, // Сохраняем тип файла
-      };
+      // Save work to Supabase database
+      const { error } = await supabase
+        .from('works')
+        .insert({
+          image_url: imageUrl,
+          title: title || null,
+          category: category,
+          views: 0,
+          creator_id: userId,
+          creator_name: userName || 'Аноним',
+          is_video: isVideo,
+        });
 
-      // Save to user's works
-      const userWorks = JSON.parse(localStorage.getItem(`works_${userId}`) || '[]');
-      userWorks.push(newWork);
-      localStorage.setItem(`works_${userId}`, JSON.stringify(userWorks));
-
-      // Save to all works (for main feed)
-      const allWorks = JSON.parse(localStorage.getItem('all_works') || '[]');
-      allWorks.unshift(newWork);
-      localStorage.setItem('all_works', JSON.stringify(allWorks));
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error('Ошибка сохранения в базу данных');
+      }
 
       // Reset form
       setFile(null);

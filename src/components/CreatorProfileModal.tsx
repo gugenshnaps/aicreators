@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Work {
   id: string;
-  imageUrl: string;
+  image_url: string;
   title: string;
   category: string;
   views: number;
+  is_video: boolean;
 }
 
 interface CreatorProfileModalProps {
@@ -25,18 +27,37 @@ interface CreatorProfileModalProps {
 
 export default function CreatorProfileModal({ isOpen, onClose, creator, onWorkClick }: CreatorProfileModalProps) {
   const [works, setWorks] = useState<Work[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (creator) {
-      // Load creator's works from localStorage
-      const savedWorks = localStorage.getItem(`works_${creator.id}`);
-      if (savedWorks) {
-        setWorks(JSON.parse(savedWorks));
-      } else {
-        setWorks([]);
-      }
+    if (creator && isOpen) {
+      loadCreatorWorks();
     }
   }, [creator, isOpen]);
+
+  const loadCreatorWorks = async () => {
+    if (!creator) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('works')
+        .select('*')
+        .eq('creator_id', creator.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading works:', error);
+        return;
+      }
+
+      setWorks(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -62,7 +83,6 @@ export default function CreatorProfileModal({ isOpen, onClose, creator, onWorkCl
   return (
     <div 
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
@@ -136,7 +156,15 @@ export default function CreatorProfileModal({ isOpen, onClose, creator, onWorkCl
 
         {/* Works Grid */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {works.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <svg className="animate-spin w-10 h-10 mx-auto text-blue-500 mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-gray-500">Загрузка...</p>
+            </div>
+          ) : works.length === 0 ? (
             <div className="text-center py-12">
               <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -152,18 +180,31 @@ export default function CreatorProfileModal({ isOpen, onClose, creator, onWorkCl
                   onClick={() => {
                     if (onWorkClick) {
                       onWorkClick({
-                        ...work,
+                        id: work.id,
+                        imageUrl: work.image_url,
+                        title: work.title,
+                        category: work.category,
                         views: `${work.views} просм.`,
                         height: 300,
                         creatorId: creator.id,
+                        creatorName: creator.name,
+                        isVideo: work.is_video,
                       });
                     }
                   }}
                 >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center bg-gray-100"
-                    style={{ backgroundImage: `url(${work.imageUrl})` }}
-                  />
+                  {work.is_video ? (
+                    <video 
+                      src={work.image_url}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      muted
+                    />
+                  ) : (
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-gray-100"
+                      style={{ backgroundImage: `url(${work.image_url})` }}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
                   {work.title && (
                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
