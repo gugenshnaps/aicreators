@@ -186,7 +186,7 @@ export default function Header({
           onClick={() => onCategoryChange(null)}
           className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
             selectedCategory === null 
-              ? 'bg-[#2F00FF] text-white' 
+              ? 'bg-black text-white' 
               : 'hover:opacity-70'
           }`}
           style={{ 
@@ -203,7 +203,7 @@ export default function Header({
             onClick={() => onCategoryChange(cat)}
             className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
               selectedCategory === cat 
-                ? 'bg-[#2F00FF] text-white' 
+                ? 'bg-black text-white' 
                 : 'hover:opacity-70'
             }`}
             style={{ 
