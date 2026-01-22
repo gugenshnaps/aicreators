@@ -186,12 +186,13 @@ export default function Header({
           onClick={() => onCategoryChange(null)}
           className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
             selectedCategory === null 
-              ? 'bg-black' 
+              ? '' 
               : 'hover:opacity-70'
           }`}
           style={{ 
             fontFamily: 'var(--font-londrina-shadow)', 
-            color: '#2F00FF' 
+            color: '#2F00FF',
+            backgroundColor: selectedCategory === null ? 'rgba(255, 230, 0, 0.3)' : 'transparent'
           }}
         >
           ALL
@@ -203,12 +204,13 @@ export default function Header({
             onClick={() => onCategoryChange(cat)}
             className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
               selectedCategory === cat 
-                ? 'bg-black' 
+                ? '' 
                 : 'hover:opacity-70'
             }`}
             style={{ 
               fontFamily: 'var(--font-londrina-shadow)', 
-              color: '#2F00FF' 
+              color: '#2F00FF',
+              backgroundColor: selectedCategory === cat ? 'rgba(255, 230, 0, 0.3)' : 'transparent'
             }}
           >
             {cat}
