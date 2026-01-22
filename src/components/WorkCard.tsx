@@ -7,10 +7,14 @@ interface WorkCardProps {
   views: string;
   height?: number;
   gradient?: string;
+  isVideo?: boolean;
   onClick?: () => void;
 }
 
-export default function WorkCard({ id, imageUrl, title, views, height = 280, gradient, onClick }: WorkCardProps) {
+export default function WorkCard({ id, imageUrl, title, views, height = 280, gradient, isVideo, onClick }: WorkCardProps) {
+  // Определяем видео по расширению если isVideo не передан
+  const isVideoFile = isVideo || /\.(mp4|webm|mov|avi)$/i.test(imageUrl || '');
+  
   return (
     <div 
       className="masonry-item group cursor-pointer"
@@ -20,11 +24,24 @@ export default function WorkCard({ id, imageUrl, title, views, height = 280, gra
         className="relative overflow-hidden transition-all duration-300 hover:opacity-90"
         style={{ height: `${height}px` }}
       >
-        {/* Image or Gradient Background */}
+        {/* Image, Video or Gradient Background */}
         {gradient ? (
           <div 
             className="absolute inset-0"
             style={{ background: gradient }}
+          />
+        ) : isVideoFile ? (
+          <video
+            src={imageUrl}
+            className="absolute inset-0 w-full h-full object-cover bg-gray-200"
+            muted
+            loop
+            playsInline
+            onMouseEnter={(e) => e.currentTarget.play()}
+            onMouseLeave={(e) => {
+              e.currentTarget.pause();
+              e.currentTarget.currentTime = 0;
+            }}
           />
         ) : (
           <div 
@@ -42,6 +59,15 @@ export default function WorkCard({ id, imageUrl, title, views, height = 280, gra
             <h3 className="text-white text-center font-bold text-lg drop-shadow-lg line-clamp-3">
               {title}
             </h3>
+          </div>
+        )}
+
+        {/* Video indicator */}
+        {isVideoFile && (
+          <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 md:px-2.5 md:py-1">
+            <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+            </svg>
           </div>
         )}
 

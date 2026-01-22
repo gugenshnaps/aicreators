@@ -30,6 +30,7 @@ interface UserWork {
   createdAt: string;
   creatorId: string;
   creatorName: string;
+  isVideo?: boolean;
 }
 
 export default function Home() {
@@ -223,10 +224,12 @@ export default function Home() {
       creatorName: w.creatorName,
       gradient: undefined as string | undefined,
       isUserWork: true,
+      isVideo: w.isVideo, // Передаём тип файла
     })),
     ...mockWorks.map(w => ({
       ...w,
       isUserWork: false,
+      isVideo: false,
     })),
   ];
 
@@ -253,6 +256,7 @@ export default function Home() {
               views={work.views}
               height={work.height}
               gradient={work.gradient}
+              isVideo={work.isVideo}
               onClick={() => handleWorkClick(work as Work)}
             />
           ))}

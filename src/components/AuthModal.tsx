@@ -29,6 +29,7 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     setIsLogin(mode === 'open');
@@ -88,6 +89,7 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
             data: {
               name: name || email.split('@')[0],
             },
+            emailRedirectTo: undefined, // Отключаем редирект
           },
         });
 
@@ -101,9 +103,17 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
           };
           
           localStorage.setItem('user', JSON.stringify(user));
-          onSuccess?.(user);
-          resetForm();
-          onClose();
+          
+          // Показываем плашку успеха
+          setShowSuccess(true);
+          
+          // Через 2 секунды закрываем и вызываем onSuccess
+          setTimeout(() => {
+            onSuccess?.(user);
+            resetForm();
+            setShowSuccess(false);
+            onClose();
+          }, 2000);
         }
       }
     } catch (err: any) {
@@ -165,6 +175,29 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
           </svg>
         </button>
 
+        {/* Success Message */}
+        {showSuccess ? (
+          <div className="py-12 text-center">
+            <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 
+              className="text-2xl md:text-3xl text-center mb-3"
+              style={{ fontFamily: 'var(--font-londrina-shadow)', color: '#00C853' }}
+            >
+              ДОБРО ПОЖАЛОВАТЬ!
+            </h2>
+            <p className="text-gray-600 text-lg">
+              🎉 Вы успешно зарегистрировались!
+            </p>
+            <p className="text-gray-500 mt-2">
+              Ждём ваших работ!
+            </p>
+          </div>
+        ) : (
+          <>
         {/* Title */}
         <h2 
           className="text-3xl text-center mb-2"
@@ -328,6 +361,8 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

@@ -14,6 +14,7 @@ interface WorkModalProps {
     gradient?: string;
     category: string;
     creatorId: number | string;
+    isVideo?: boolean;
   } | null;
   creator?: {
     id: number | string;
@@ -45,6 +46,9 @@ export default function WorkModal({ isOpen, onClose, work, creator, onContactCli
 
   if (!isOpen || !work) return null;
 
+  // Определяем видео по расширению если isVideo не передан
+  const isVideoFile = work.isVideo || /\.(mp4|webm|mov|avi)$/i.test(work.imageUrl || '');
+
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
@@ -68,7 +72,7 @@ export default function WorkModal({ isOpen, onClose, work, creator, onContactCli
         className="relative flex flex-col md:flex-row gap-4 md:gap-6 max-w-6xl w-full max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Image - full size, maintains aspect ratio */}
+        {/* Image/Video - full size, maintains aspect ratio */}
         <div className="flex-1 flex items-center justify-center min-h-0">
           {work.gradient ? (
             <div 
@@ -87,6 +91,15 @@ export default function WorkModal({ isOpen, onClose, work, creator, onContactCli
                 </div>
               )}
             </div>
+          ) : isVideoFile ? (
+            <video
+              src={work.imageUrl}
+              className="max-w-full max-h-[70vh] md:max-h-[80vh] object-contain rounded-lg"
+              controls
+              autoPlay
+              loop
+              playsInline
+            />
           ) : (
             <img
               src={work.imageUrl}

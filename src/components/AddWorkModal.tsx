@@ -96,6 +96,8 @@ export default function AddWorkModal({ isOpen, onClose, userId, userName, onWork
         throw new Error('Ошибка загрузки файла');
       }
 
+      const isVideo = file.type.startsWith('video/');
+      
       const newWork = {
         id: `work_${Date.now()}`,
         imageUrl,
@@ -105,6 +107,7 @@ export default function AddWorkModal({ isOpen, onClose, userId, userName, onWork
         createdAt: new Date().toISOString(),
         creatorId: userId,
         creatorName: userName || 'Аноним',
+        isVideo, // Сохраняем тип файла
       };
 
       // Save to user's works
