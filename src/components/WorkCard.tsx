@@ -20,9 +20,10 @@ export default function WorkCard({ id, imageUrl, title, views, height = 280, gra
       className="masonry-item group cursor-pointer"
       onClick={onClick}
     >
+      {/* На мобильной - квадратные, на десктопе - masonry с разной высотой */}
       <div 
-        className="relative overflow-hidden transition-all duration-300 hover:opacity-90"
-        style={{ height: `${height}px` }}
+        className="work-card relative overflow-hidden transition-all duration-300 hover:opacity-90"
+        style={{ '--card-height': `${height}px` } as React.CSSProperties}
       >
         {/* Image, Video or Gradient Background */}
         {gradient ? (
@@ -53,28 +54,19 @@ export default function WorkCard({ id, imageUrl, title, views, height = 280, gra
         {/* Overlay on hover */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-        {/* Title overlay (if present) */}
-        {title && (
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <h3 className="text-white text-center font-bold text-lg drop-shadow-lg line-clamp-3">
-              {title}
-            </h3>
-          </div>
-        )}
-
         {/* Video indicator */}
         {isVideoFile && (
-          <div className="absolute top-2 right-2 md:top-3 md:right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 md:px-2.5 md:py-1">
+          <div className="absolute top-1 right-1 md:top-3 md:right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full p-1 md:px-2.5 md:py-1">
             <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
             </svg>
           </div>
         )}
 
-        {/* Views counter */}
-        <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 flex items-center gap-1 md:gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 md:px-2.5 md:py-1">
+        {/* Views counter - hidden on mobile for cleaner look */}
+        <div className="hidden md:flex absolute bottom-3 left-3 items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
           <svg 
-            className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" 
+            className="w-4 h-4 text-emerald-400" 
             fill="currentColor" 
             viewBox="0 0 20 20"
           >
@@ -85,7 +77,7 @@ export default function WorkCard({ id, imageUrl, title, views, height = 280, gra
               clipRule="evenodd" 
             />
           </svg>
-          <span className="text-white text-[10px] md:text-xs font-medium">{views}</span>
+          <span className="text-white text-xs font-medium">{views}</span>
         </div>
       </div>
     </div>

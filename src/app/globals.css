@@ -55,7 +55,24 @@ body {
 
 @media (max-width: 480px) {
   .masonry-grid {
-    column-count: 1;
+    column-count: 3;
+    column-gap: 1px;
+  }
+  
+  .masonry-item {
+    margin-bottom: 1px;
+  }
+}
+
+/* Work Card - квадратные на мобильной, разная высота на десктопе */
+.work-card {
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 768px) {
+  .work-card {
+    aspect-ratio: unset;
+    height: var(--card-height, 280px);
   }
 }
 
