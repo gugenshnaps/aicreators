@@ -93,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
         </p>
 
         {/* Telegram Login Button */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <TelegramLoginButton
             botName="aicreatorslog_bot"
             onAuth={handleTelegramAuth}
@@ -102,6 +102,27 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
             showUserPic={true}
             lang="ru"
           />
+        </div>
+
+        {/* Временная кнопка для тестирования */}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => {
+              const testUser = {
+                id: Date.now(),
+                first_name: 'Тестовый',
+                last_name: 'Креатор',
+                username: 'test_creator',
+                photo_url: '',
+                auth_date: Math.floor(Date.now() / 1000),
+                hash: 'test'
+              };
+              handleTelegramAuth(testUser);
+            }}
+            className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+          >
+            Войти без Telegram (для теста)
+          </button>
         </div>
 
         {/* Info */}
