@@ -9,9 +9,10 @@ interface HeaderProps {
   onLogout?: () => void;
   onAddWork?: () => void;
   onOpenProfile?: () => void;
+  onMyWorks?: () => void;
 }
 
-export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenProfile }: HeaderProps) {
+export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenProfile, onMyWorks }: HeaderProps) {
   const categories = ['VIDEO', 'IMAGE', 'FASHION', 'AVATAR', 'MARKETPLACE'];
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,18 @@ export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenPr
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     Мой профиль
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onMyWorks?.();
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Мои работы
                   </button>
                   <button
                     onClick={() => {
