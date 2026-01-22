@@ -123,6 +123,7 @@ export default function Home() {
       height: 280 + Math.floor(Math.random() * 100),
       category: w.category,
       creatorId: 1,
+      gradient: undefined as string | undefined,
     })),
     ...mockWorks,
   ];
