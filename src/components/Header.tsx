@@ -10,9 +10,20 @@ interface HeaderProps {
   onAddWork?: () => void;
   onOpenProfile?: () => void;
   onMyWorks?: () => void;
+  selectedCategory: string | null;
+  onCategoryChange: (category: string | null) => void;
 }
 
-export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenProfile, onMyWorks }: HeaderProps) {
+export default function Header({ 
+  onOpenAuth, 
+  user, 
+  onLogout, 
+  onAddWork, 
+  onOpenProfile, 
+  onMyWorks,
+  selectedCategory,
+  onCategoryChange 
+}: HeaderProps) {
   const categories = ['VIDEO', 'IMAGE', 'FASHION', 'AVATAR', 'MARKETPLACE'];
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -160,8 +171,9 @@ export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenPr
       {/* Main title "Creators" */}
       <div className="flex justify-center py-1 md:py-2">
         <h1
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-wide"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-wide cursor-pointer hover:opacity-80 transition-opacity"
           style={{ fontFamily: 'var(--font-londrina-shadow)', color: '#2F00FF' }}
+          onClick={() => onCategoryChange(null)}
         >
           Creators
         </h1>
@@ -169,11 +181,35 @@ export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenPr
 
       {/* Categories - scrollable on mobile */}
       <div className="flex justify-start md:justify-center gap-3 md:gap-6 lg:gap-8 py-2 md:py-3 overflow-x-auto px-3 md:px-6 scrollbar-hide">
+        {/* ALL button */}
+        <button
+          onClick={() => onCategoryChange(null)}
+          className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
+            selectedCategory === null 
+              ? 'bg-[#2F00FF] text-white' 
+              : 'hover:opacity-70'
+          }`}
+          style={{ 
+            fontFamily: 'var(--font-londrina-shadow)', 
+            color: selectedCategory === null ? '#fff' : '#2F00FF' 
+          }}
+        >
+          ALL
+        </button>
+        
         {categories.map((cat) => (
           <button
             key={cat}
-            className="text-base md:text-lg lg:text-xl tracking-wide hover:opacity-70 transition-opacity whitespace-nowrap flex-shrink-0"
-            style={{ fontFamily: 'var(--font-londrina-shadow)', color: '#2F00FF' }}
+            onClick={() => onCategoryChange(cat)}
+            className={`text-base md:text-lg lg:text-xl tracking-wide transition-all whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full ${
+              selectedCategory === cat 
+                ? 'bg-[#2F00FF] text-white' 
+                : 'hover:opacity-70'
+            }`}
+            style={{ 
+              fontFamily: 'var(--font-londrina-shadow)', 
+              color: selectedCategory === cat ? '#fff' : '#2F00FF' 
+            }}
           >
             {cat}
           </button>

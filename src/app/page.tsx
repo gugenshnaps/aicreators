@@ -77,6 +77,9 @@ export default function Home() {
   // Works from Supabase
   const [works, setWorks] = useState<DisplayWork[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Category filter
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Load user and works on mount
   useEffect(() => {
@@ -92,14 +95,26 @@ export default function Home() {
     loadWorks();
   }, []);
 
+  // Reload works when category changes
+  useEffect(() => {
+    loadWorks(selectedCategory);
+  }, [selectedCategory]);
+
   // Загрузка работ из Supabase
-  const loadWorks = async () => {
+  const loadWorks = async (category?: string | null) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('works')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Фильтр по категории
+      if (category) {
+        query = query.eq('category', category);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error loading works:', error);
@@ -125,6 +140,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCategoryChange = (category: string | null) => {
+    setSelectedCategory(category);
   };
 
   const handleOpenAuth = (mode: AuthMode) => {
@@ -157,7 +176,7 @@ export default function Home() {
   };
 
   const handleWorkAdded = () => {
-    loadWorks(); // Перезагружаем работы из Supabase
+    loadWorks(selectedCategory); // Перезагружаем работы из Supabase
   };
 
   const handleContactClick = () => {
@@ -203,6 +222,8 @@ export default function Home() {
         onAddWork={() => setAddWorkModalOpen(true)}
         onOpenProfile={() => setProfileModalOpen(true)}
         onMyWorks={() => setMyWorksModalOpen(true)}
+        selectedCategory={selectedCategory}
+        onCategoryChange={handleCategoryChange}
       />
 
       <main className="px-0">
@@ -219,8 +240,16 @@ export default function Home() {
         ) : works.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-gray-500 text-lg mb-2">Пока нет работ</p>
-              <p className="text-gray-400">Будьте первым, кто добавит работу!</p>
+              <p className="text-gray-500 text-lg mb-2">
+                {selectedCategory 
+                  ? `Нет работ в категории ${selectedCategory}` 
+                  : 'Пока нет работ'}
+              </p>
+              <p className="text-gray-400">
+                {selectedCategory 
+                  ? 'Попробуйте выбрать другую категорию' 
+                  : 'Будьте первым, кто добавит работу!'}
+              </p>
             </div>
           </div>
         ) : (
