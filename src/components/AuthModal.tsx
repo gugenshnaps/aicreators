@@ -155,15 +155,13 @@ export default function AuthModal({ isOpen, onClose, mode, onSuccess }: AuthModa
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
     >
-      {/* Backdrop */}
+      {/* Backdrop - не закрывается по клику */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
       {/* Modal Content */}
       <div 
         className="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button 
