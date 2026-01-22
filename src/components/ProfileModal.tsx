@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { uploadFile } from '@/lib/supabase';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ export default function ProfileModal({ isOpen, onClose, user, onSave }: ProfileM
   const [photo, setPhoto] = useState('');
   const [telegram, setTelegram] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -44,6 +47,33 @@ export default function ProfileModal({ isOpen, onClose, user, onSave }: ProfileM
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !user) return;
+
+    const file = e.target.files[0];
+    
+    if (!file.type.startsWith('image/')) {
+      alert('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const imageUrl = await uploadFile('avatars', file, user.id);
+      if (imageUrl) {
+        setPhoto(imageUrl);
+      } else {
+        alert('Ошибка загрузки фото');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Ошибка загрузки фото');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSave = () => {
     if (user) {
@@ -92,16 +122,57 @@ export default function ProfileModal({ isOpen, onClose, user, onSave }: ProfileM
         {/* Avatar */}
         <div className="flex flex-col items-center mb-6">
           <div 
-            className="w-24 h-24 rounded-full bg-gray-200 bg-cover bg-center mb-3"
+            className="relative w-24 h-24 rounded-full bg-gray-200 bg-cover bg-center mb-3 cursor-pointer group"
             style={{ backgroundImage: photo ? `url(${photo})` : undefined }}
-          />
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {/* Upload overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-full transition-colors flex items-center justify-center">
+              <svg 
+                className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            
+            {/* Loading spinner */}
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                <svg className="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            )}
+
+            {/* Placeholder icon */}
+            {!photo && !isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            )}
+          </div>
+          
           <input
-            type="text"
-            value={photo}
-            onChange={(e) => setPhoto(e.target.value)}
-            placeholder="URL фото профиля"
-            className="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
           />
+          
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            {photo ? 'Изменить фото' : 'Загрузить фото'}
+          </button>
         </div>
 
         {/* Name */}
