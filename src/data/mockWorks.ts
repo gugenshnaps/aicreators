@@ -1,12 +1,14 @@
 export interface Work {
-  id: number;
+  id: string | number;
   imageUrl: string;
   title: string;
   views: string;
   height: number;
   gradient?: string;
   category: string;
-  creatorId: number;
+  creatorId: string | number;
+  creatorName?: string;
+  isUserWork?: boolean;
 }
 
 export interface Creator {

@@ -1,7 +1,7 @@
 'use client';
 
 interface WorkCardProps {
-  id: number;
+  id: string | number;
   imageUrl: string;
   title: string;
   views: string;

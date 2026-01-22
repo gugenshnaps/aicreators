@@ -6,7 +6,7 @@ interface WorkModalProps {
   isOpen: boolean;
   onClose: () => void;
   work: {
-    id: number;
+    id: string | number;
     imageUrl: string;
     title: string;
     views: string;

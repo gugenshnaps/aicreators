@@ -121,16 +121,15 @@ export default function Home() {
 
   const handleContactClick = () => {
     if (selectedWork) {
-      // Check if it's a user work or mock work
-      const userWork = userWorks.find(w => w.id === selectedWork.id.toString() || `work_${selectedWork.id}` === w.id);
+      const work = selectedWork as any;
       
-      if (userWork) {
+      if (work.isUserWork) {
         // Get creator profile from localStorage
-        const savedProfile = localStorage.getItem(`profile_${userWork.creatorId}`);
+        const savedProfile = localStorage.getItem(`profile_${work.creatorId}`);
         const profile = savedProfile ? JSON.parse(savedProfile) : {};
         
         setSelectedCreatorContact({
-          name: userWork.creatorName,
+          name: work.creatorName || 'Креатор',
           telegram: profile.telegram,
           instagram: profile.instagram,
         });
@@ -149,21 +148,30 @@ export default function Home() {
 
   const handleViewProfileClick = () => {
     if (selectedWork) {
-      const userWork = userWorks.find(w => w.id === selectedWork.id.toString() || `work_${selectedWork.id}` === w.id);
+      const work = selectedWork as any;
       
-      if (userWork) {
-        const savedProfile = localStorage.getItem(`profile_${userWork.creatorId}`);
+      if (work.isUserWork) {
+        const savedProfile = localStorage.getItem(`profile_${work.creatorId}`);
         const profile = savedProfile ? JSON.parse(savedProfile) : {};
+        
+        // Get avatar from user data if it's the current user
+        let avatar = '';
         const savedUser = localStorage.getItem('user');
-        const creatorUser = savedUser ? JSON.parse(savedUser) : null;
+        if (savedUser) {
+          const currentUser = JSON.parse(savedUser);
+          if (currentUser.id === work.creatorId) {
+            avatar = currentUser.photo || '';
+          }
+        }
         
         setSelectedCreatorProfile({
-          id: userWork.creatorId,
-          name: userWork.creatorName,
-          avatar: creatorUser?.photo,
+          id: work.creatorId,
+          name: work.creatorName || 'Креатор',
+          avatar: avatar,
           telegram: profile.telegram,
           instagram: profile.instagram,
         });
+        setCreatorProfileModalOpen(true);
       } else {
         const creator = mockCreators.find(c => c.id === selectedWork.creatorId);
         if (creator) {
@@ -174,39 +182,52 @@ export default function Home() {
             telegram: '@creator',
             instagram: '@creator',
           });
+          setCreatorProfileModalOpen(true);
         }
       }
-      setCreatorProfileModalOpen(true);
     }
   };
 
-  const getCreatorForWork = (creatorId: number | string) => {
-    // Check if it's a user's work
-    const work = userWorks.find(w => w.creatorId === creatorId.toString());
-    if (work) {
+  const getCreatorForWork = (work: any) => {
+    if (work.isUserWork) {
+      // Get avatar from user if it's current user
+      let avatar = '';
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const currentUser = JSON.parse(savedUser);
+        if (currentUser.id === work.creatorId) {
+          avatar = currentUser.photo || '';
+        }
+      }
+      
       return {
-        id: parseInt(creatorId.toString()) || 0,
-        name: work.creatorName,
-        avatar: '',
+        id: work.creatorId,
+        name: work.creatorName || 'Креатор',
+        avatar: avatar,
         specialty: 'AI Креатор',
       };
     }
-    return mockCreators.find(c => c.id === creatorId);
+    return mockCreators.find(c => c.id === work.creatorId);
   };
 
   // Combine mock works with user works
   const allDisplayWorks = [
     ...userWorks.map((w, index) => ({
-      id: 1000 + index,
+      id: w.id, // Keep original ID
       imageUrl: w.imageUrl,
       title: w.title,
       views: `${w.views} просм.`,
       height: 280 + Math.floor(Math.random() * 100),
       category: w.category,
-      creatorId: w.creatorId as unknown as number,
+      creatorId: w.creatorId,
+      creatorName: w.creatorName,
       gradient: undefined as string | undefined,
+      isUserWork: true,
     })),
-    ...mockWorks,
+    ...mockWorks.map(w => ({
+      ...w,
+      isUserWork: false,
+    })),
   ];
 
   return (
@@ -243,7 +264,7 @@ export default function Home() {
         isOpen={workModalOpen}
         onClose={() => setWorkModalOpen(false)}
         work={selectedWork}
-        creator={selectedWork ? getCreatorForWork(selectedWork.creatorId) : undefined}
+        creator={selectedWork ? getCreatorForWork(selectedWork) : undefined}
         onContactClick={handleContactClick}
         onViewProfileClick={handleViewProfileClick}
       />
