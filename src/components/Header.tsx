@@ -1,15 +1,32 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 interface HeaderProps {
   onOpenAuth: (mode: 'open' | 'reg') => void;
   user?: { id: string; name: string; username?: string; photo?: string } | null;
   onLogout?: () => void;
+  onAddWork?: () => void;
+  onOpenProfile?: () => void;
 }
 
-export default function Header({ onOpenAuth, user, onLogout }: HeaderProps) {
+export default function Header({ onOpenAuth, user, onLogout, onAddWork, onOpenProfile }: HeaderProps) {
   const categories = ['VIDEO', 'IMAGE', 'FASHION', 'AVATAR', 'MARKETPLACE'];
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="bg-white sticky top-0 z-40">
@@ -27,25 +44,78 @@ export default function Header({ onOpenAuth, user, onLogout }: HeaderProps) {
           />
         </div>
 
-        {/* Auth buttons or User info - absolute right */}
+        {/* Auth buttons or User menu - absolute right */}
         <div className="absolute right-3 md:right-6 flex items-center">
           {user ? (
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="relative flex items-center gap-2" ref={menuRef}>
+              {/* Avatar */}
               <div 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-cover bg-center ring-2 ring-gray-200"
-                style={{ backgroundImage: user.photo ? `url(${user.photo})` : undefined, backgroundColor: '#ddd' }}
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-cover bg-center bg-gray-300"
+                style={{ backgroundImage: user.photo ? `url(${user.photo})` : undefined }}
               />
-              <span 
-                className="hidden md:block text-sm font-medium text-gray-700"
-              >
-                {user.name}
-              </span>
+              
+              {/* Menu button (hamburger) */}
               <button
-                onClick={onLogout}
-                className="text-xs md:text-sm text-gray-400 hover:text-gray-600 transition-colors ml-2"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Выйти
+                <svg 
+                  className="w-6 h-6 text-gray-700" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M4 6h16M4 12h16M4 18h16" 
+                  />
+                </svg>
               </button>
+
+              {/* Dropdown menu */}
+              {menuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenProfile?.();
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Мой профиль
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onAddWork?.();
+                    }}
+                    className="w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Добавить работу
+                  </button>
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onLogout?.();
+                    }}
+                    className="w-full px-4 py-3 text-left text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Выйти
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>

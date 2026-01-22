@@ -62,12 +62,24 @@ export default function Home() {
     return mockCreators.find(c => c.id === creatorId);
   };
 
+  const handleAddWork = () => {
+    // TODO: Открыть модалку добавления работы
+    alert('Функция "Добавить работу" — скоро сделаем!');
+  };
+
+  const handleOpenProfile = () => {
+    // TODO: Открыть страницу профиля
+    alert('Функция "Мой профиль" — скоро сделаем!');
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header 
         onOpenAuth={handleOpenAuth} 
         user={user}
         onLogout={handleLogout}
+        onAddWork={handleAddWork}
+        onOpenProfile={handleOpenProfile}
       />
 
       <main className="px-0">
